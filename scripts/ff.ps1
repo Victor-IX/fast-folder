@@ -6,7 +6,7 @@ function ff {
         [string[]]$Arguments
     )
 
-    $ProjectPath = "H:\Projects\fast-folder"
+    $ProjectPath = Split-Path -Parent $PSScriptRoot
     $HandoffFile = Join-Path $env:USERPROFILE ".ff\.last_target"
 
     if (Test-Path $HandoffFile) {

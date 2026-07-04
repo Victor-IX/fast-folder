@@ -6,43 +6,42 @@ A simple CLI tool to navigate to saved locations faster.
 
 ## Install
 1. Download the latest `fast-folder-windows.zip` from the
-   [Releases](../../releases) page and extract it somewhere permanent (e.g.
-   `C:\Tools\fast-folder`).
-2. Add the shell integration to your PowerShell profile so `ff` is available
-   in every session. Add this line to your `$PROFILE`, pointing at the folder
-   where you extracted the zip:
-
-   ```powershell
-   . "C:\Tools\fast-folder\ff.ps1"
-   ```
-3. Reload your profile (`. $PROFILE`) or open a new terminal.
-
-`ff.ps1` looks for `fast-folder.exe` next to itself, so keep both files in
-the same folder.
+   [Releases](../../releases) page and extract it (anywhere, even a Downloads
+   folder).
+2. Double-click `fast-folder.exe`. It copies itself and `ff.ps1` to
+   `%LOCALAPPDATA%\fast-folder` and adds the dot-source line to your
+   `$PROFILE` automatically.
+3. Open a new PowerShell window (or run `. $PROFILE`) and `ff` is available.
 
 ### Running from source (development)
-If you'd rather run from a cloned copy of the repo, install
-[uv](https://docs.astral.sh/uv/) and run `uv sync`. `scripts\ff.ps1` falls
-back to `uv run --project <repo path>` whenever `fast-folder.exe` isn't
-found next to it, so update `$ProjectPath` in that script to point at your
-clone.
+If you'd rather run from a cloned copy of the repo, set up the Python
+environment first — [uv](https://docs.astral.sh/uv/) is recommended
+(`uv sync`), but any package manager works as long as `fast-folder` is
+runnable, since `scripts\ff.ps1` falls back to
+`uv run --project <repo path> fast-folder` when no `fast-folder.exe` sits
+next to it.
+
+Then run the setup script from the repo root to wire up your `$PROFILE`:
+
+```powershell
+.\scripts\dev-setup.ps1
+```
+
+It adds the dot-source line for `scripts\ff.ps1` to your `$PROFILE`. Open a
+new PowerShell window (or run `. $PROFILE`) and `ff` is available.
 
 ## Usage
 ```powershell
 ff save <name>     # save the current directory under <name>
 ff <name>          # jump to the directory saved as <name>
+ff go <name>       # jump to the directory saved as <name> (explicit form)
 ff remove <name>   # remove a saved location
 ff list             # list all saved locations
 ff menu             # pick a saved location from an interactive menu
+ff install          # copy fast-folder to a permanent location and wire up your PowerShell profile
 ```
 
-`save`, `remove`, `list`, `menu`, and `go` are reserved words and cannot be
-used as location names.
+`save`, `remove`, `list`, `menu`, `go`, and `install` are reserved words and
+cannot be used as location names.
 
 Saved locations are stored in `%USERPROFILE%\.ff\locations.json`.
-
-## Releasing
-Pushing a tag matching `v*` (e.g. `v0.1.0`) triggers the `Release` GitHub
-Actions workflow, which builds `fast-folder.exe` with PyInstaller and
-publishes a `fast-folder-windows.zip` (exe + `ff.ps1` + docs) as a GitHub
-Release.

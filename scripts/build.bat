@@ -10,7 +10,7 @@ set "REPO_ROOT=%SCRIPT_DIR%.."
 pushd "%REPO_ROOT%" || exit /b 1
 
 echo Building fast-folder standalone executable...
-uv run pyinstaller --onefile --name fast-folder --paths src src\cli.py
+uv run pyinstaller --onefile --name fast-folder --paths src --add-data "scripts\ff.ps1;." src\cli.py
 if errorlevel 1 (
     echo Build failed.
     popd

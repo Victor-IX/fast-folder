@@ -7,9 +7,11 @@ import questionary
 import typer
 
 from handoff import write_target
+from installer import install as run_install
+from installer import is_launched_by_double_click
 from storage import load_locations, save_locations
 
-RESERVED_NAMES = {"save", "remove", "list", "menu", "go"}
+RESERVED_NAMES = {"save", "remove", "list", "menu", "go", "install"}
 
 app = typer.Typer(
     add_completion=False,
@@ -92,8 +94,18 @@ def go(name: str) -> None:
     write_target(Path(locations[name]))
 
 
+@app.command()
+def install() -> None:
+    """Copy fast-folder to a permanent location and wire up your PowerShell profile."""
+    run_install()
+
+
 def main() -> None:
     args = sys.argv[1:]
+    if not args and is_launched_by_double_click():
+        run_install()
+        input("\nPress Enter to exit...")
+        return
     if args and args[0] not in RESERVED_NAMES and not args[0].startswith("-"):
         sys.argv = [sys.argv[0], "go", *args]
     app()
