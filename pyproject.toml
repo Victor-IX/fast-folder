@@ -1,0 +1,14 @@
+[project]
+name = "fast-folder"
+version = "0.1.0"
+description = "A lightweight CLI to save and jump to folder locations"
+readme = "README.md"
+authors = [{ name = "Victor", email = "victor.ched@gmail.com" }]
+requires-python = ">=3.14"
+dependencies = ["questionary>=2.1.1", "typer>=0.26.8"]
+
+[dependency-groups]
+dev = ["pyinstaller>=6.21.0", "ruff>=0.15.20"]
+
+[tool.ruff]
+line-length = 120
