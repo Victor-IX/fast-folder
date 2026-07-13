@@ -32,6 +32,7 @@ new PowerShell window (or run `. $PROFILE`) and `ff` is available.
 
 ## Usage
 ```powershell
+ff save            # save the current directory under its folder name
 ff save <name>     # save the current directory under <name>
 ff <name>          # jump to the directory saved as <name>
 ff go <name>       # jump to the directory saved as <name> (explicit form)

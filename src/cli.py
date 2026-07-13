@@ -21,14 +21,18 @@ app = typer.Typer(
 
 
 @app.command()
-def save(name: str) -> None:
-    """Save the current directory under NAME."""
+def save(name: str = typer.Argument(None)) -> None:
+    """Save the current directory under NAME. Defaults to the current folder's name."""
+    current_path = str(Path.cwd())
+
+    if name is None:
+        name = Path.cwd().name
+
     if name in RESERVED_NAMES:
         typer.echo(f"'{name}' is a reserved command name, pick another.", err=True)
         raise typer.Exit(1)
 
     locations = load_locations()
-    current_path = str(Path.cwd())
 
     if name in locations:
         overwrite = typer.confirm(f"'{name}' already points to {locations[name]}. Overwrite?")
@@ -106,7 +110,9 @@ def main() -> None:
         run_install()
         input("\nPress Enter to exit...")
         return
-    if args and args[0] not in RESERVED_NAMES and not args[0].startswith("-"):
+    if not args:
+        sys.argv = [sys.argv[0], "menu"]
+    elif args[0] not in RESERVED_NAMES and not args[0].startswith("-"):
         sys.argv = [sys.argv[0], "go", *args]
     app()
 
