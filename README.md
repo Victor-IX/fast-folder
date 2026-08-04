@@ -51,9 +51,4 @@ You don't have to type a saved name exactly. `ff <name>` and `ff remove <name>`
 score every saved name against what you typed and pick the best one, so partial
 names, wrong casing, and typos all work
 
-When one name is a clear winner, `ff` jumps straight there and prints which name
-it matched. When several are equally plausible, it shows the shortlist in a menu
-instead of guessing. `ff remove` asks for confirmation whenever the name you
-typed wasn't an exact match.
-
 Saved locations are stored in `%USERPROFILE%\.ff\locations.json`.
