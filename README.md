@@ -32,17 +32,28 @@ new PowerShell window (or run `. $PROFILE`) and `ff` is available.
 
 ## Usage
 ```powershell
+ff                 # pick a saved location from an interactive menu
 ff save            # save the current directory under its folder name
 ff save <name>     # save the current directory under <name>
 ff <name>          # jump to the directory saved as <name>
 ff go <name>       # jump to the directory saved as <name> (explicit form)
 ff remove <name>   # remove a saved location
-ff list             # list all saved locations
-ff menu             # pick a saved location from an interactive menu
-ff install          # copy fast-folder to a permanent location and wire up your PowerShell profile
+ff list            # list all saved locations, alphabetically
+ff menu            # pick a saved location from an interactive menu
+ff install         # copy fast-folder to a permanent location and wire up your PowerShell profile
 ```
 
 `save`, `remove`, `list`, `menu`, `go`, and `install` are reserved words and
 cannot be used as location names.
+
+### Fuzzy name matching
+You don't have to type a saved name exactly. `ff <name>` and `ff remove <name>`
+score every saved name against what you typed and pick the best one, so partial
+names, wrong casing, and typos all work
+
+When one name is a clear winner, `ff` jumps straight there and prints which name
+it matched. When several are equally plausible, it shows the shortlist in a menu
+instead of guessing. `ff remove` asks for confirmation whenever the name you
+typed wasn't an exact match.
 
 Saved locations are stored in `%USERPROFILE%\.ff\locations.json`.

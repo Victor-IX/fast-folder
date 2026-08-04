@@ -9,6 +9,7 @@ import typer
 from handoff import write_target
 from installer import install as run_install
 from installer import is_launched_by_double_click
+from matching import ambiguous_matches, is_clear_winner, rank
 from storage import load_locations, save_locations
 
 RESERVED_NAMES = {"save", "remove", "list", "menu", "go", "install"}
@@ -18,6 +19,39 @@ app = typer.Typer(
     no_args_is_help=True,
     help="Save and jump to folder locations.",
 )
+
+
+def sorted_names(locations: dict[str, str]) -> list[str]:
+    """Saved names in alphabetical order, ignoring case."""
+    return sorted(locations, key=str.lower)
+
+
+def resolve_name(query: str, locations: dict[str, str]) -> str:
+    """Turn user input into a saved name, tolerating typos and partial names.
+
+    Exits with an error when nothing matches, and prompts to disambiguate when
+    several saved names are equally plausible.
+    """
+    if query in locations:
+        return query
+
+    matches = rank(query, locations)
+    if not matches:
+        typer.echo(f"No saved location matching '{query}'. Use 'ff list' to see what's saved.", err=True)
+        raise typer.Exit(1)
+
+    if is_clear_winner(matches):
+        best = matches[0][0]
+        if best != query:
+            typer.echo(f"Matched '{best}'.")
+        return best
+
+    candidates = ambiguous_matches(matches)
+    choices = [questionary.Choice(title=f"{name}  ->  {locations[name]}", value=name) for name in candidates]
+    selected = questionary.select(f"Several matches for '{query}':", choices=choices).ask()
+    if selected is None:
+        raise typer.Exit(0)
+    return selected
 
 
 @app.command()
@@ -49,26 +83,30 @@ def save(name: str = typer.Argument(None)) -> None:
 def remove(name: str) -> None:
     """Remove a saved location by NAME."""
     locations = load_locations()
-    if name not in locations:
-        typer.echo(f"No saved location named '{name}'.", err=True)
-        raise typer.Exit(1)
+    resolved = resolve_name(name, locations)
 
-    del locations[name]
+    if resolved != name and not typer.confirm(f"Remove '{resolved}' ({locations[resolved]})?"):
+        typer.echo("Cancelled.")
+        raise typer.Exit(0)
+
+    del locations[resolved]
     save_locations(locations)
-    typer.echo(f"Removed '{name}'.")
+    typer.echo(f"Removed '{resolved}'.")
 
 
 @app.command(name="list")
 def list_locations() -> None:
-    """List all saved locations."""
+    """List all saved locations, alphabetically."""
     locations = load_locations()
     if not locations:
         typer.echo("No locations saved yet. Use 'ff save <name>' to add one.")
         return
 
     name_width = max(len(name) for name in locations)
-    for name in sorted(locations):
-        typer.echo(f"{name.ljust(name_width)}  {locations[name]}")
+    for name in sorted_names(locations):
+        path = locations[name]
+        suffix = "" if Path(path).is_dir() else "  (missing)"
+        typer.echo(f"{name.ljust(name_width)}  {path}{suffix}")
 
 
 @app.command()
@@ -79,7 +117,9 @@ def menu() -> None:
         typer.echo("No locations saved yet. Use 'ff save <name>' to add one.")
         return
 
-    choices = [questionary.Choice(title=f"{name}  ->  {path}", value=name) for name, path in sorted(locations.items())]
+    choices = [
+        questionary.Choice(title=f"{name}  ->  {locations[name]}", value=name) for name in sorted_names(locations)
+    ]
     selected = questionary.select("Jump to:", choices=choices).ask()
     if selected is None:
         raise typer.Exit(0)
@@ -91,11 +131,11 @@ def menu() -> None:
 def go(name: str) -> None:
     """Resolve NAME and hand its path off to the shell wrapper."""
     locations = load_locations()
-    if name not in locations:
-        typer.echo(f"No saved location named '{name}'.", err=True)
+    if not locations:
+        typer.echo("No locations saved yet. Use 'ff save <name>' to add one.")
         raise typer.Exit(1)
 
-    write_target(Path(locations[name]))
+    write_target(Path(locations[resolve_name(name, locations)]))
 
 
 @app.command()
