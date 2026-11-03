@@ -49,6 +49,8 @@ cannot be used as location names.
 ### Fuzzy name matching
 You don't have to type a saved name exactly. `ff <name>` and `ff remove <name>`
 score every saved name against what you typed and pick the best one, so partial
-names, wrong casing, and typos all work
+names, wrong casing, and typos all work. When several names tie, you get a menu
+to pick from — except when they all point at the same folder, in which case
+`ff <name>` just jumps there.
 
 Saved locations are stored in `%USERPROFILE%\.ff\locations.json`.

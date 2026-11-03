@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 
 import questionary
@@ -26,11 +28,19 @@ def sorted_names(locations: dict[str, str]) -> list[str]:
     return sorted(locations, key=str.lower)
 
 
-def resolve_name(query: str, locations: dict[str, str]) -> str:
+def same_path(paths: Iterable[str]) -> bool:
+    """True when every path points at the same directory, ignoring case and separators."""
+    normalised = {os.path.normcase(os.path.normpath(path)) for path in paths}
+    return len(normalised) == 1
+
+
+def resolve_name(query: str, locations: dict[str, str], *, path_only: bool = False) -> str:
     """Turn user input into a saved name, tolerating typos and partial names.
 
     Exits with an error when nothing matches, and prompts to disambiguate when
-    several saved names are equally plausible.
+    several saved names are equally plausible. With PATH_ONLY, rival names that
+    all point at the same directory are not worth asking about, so the best one
+    wins outright.
     """
     if query in locations:
         return query
@@ -40,13 +50,14 @@ def resolve_name(query: str, locations: dict[str, str]) -> str:
         typer.echo(f"No saved location matching '{query}'. Use 'ff list' to see what's saved.", err=True)
         raise typer.Exit(1)
 
-    if is_clear_winner(matches):
+    candidates = ambiguous_matches(matches)
+
+    if is_clear_winner(matches) or (path_only and same_path(locations[name] for name in candidates)):
         best = matches[0][0]
         if best != query:
             typer.echo(f"Matched '{best}'.")
         return best
 
-    candidates = ambiguous_matches(matches)
     choices = [questionary.Choice(title=f"{name}  ->  {locations[name]}", value=name) for name in candidates]
     selected = questionary.select(f"Several matches for '{query}':", choices=choices).ask()
     if selected is None:
@@ -135,7 +146,7 @@ def go(name: str) -> None:
         typer.echo("No locations saved yet. Use 'ff save <name>' to add one.")
         raise typer.Exit(1)
 
-    write_target(Path(locations[resolve_name(name, locations)]))
+    write_target(Path(locations[resolve_name(name, locations, path_only=True)]))
 
 
 @app.command()
